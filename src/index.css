@@ -1,0 +1,146 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 20 25% 6%;
+    --foreground: 35 30% 95%;
+    --card: 20 20% 10%;
+    --card-foreground: 35 30% 95%;
+    --popover: 20 20% 10%;
+    --popover-foreground: 35 30% 95%;
+    --primary: 35 90% 50%;
+    --primary-foreground: 20 25% 6%;
+    --secondary: 15 70% 45%;
+    --secondary-foreground: 35 30% 95%;
+    --muted: 20 15% 18%;
+    --muted-foreground: 30 15% 60%;
+    --accent: 8 80% 55%;
+    --accent-foreground: 35 30% 95%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 35 30% 98%;
+    --border: 20 15% 20%;
+    --input: 20 15% 14%;
+    --ring: 35 90% 50%;
+    --radius: 1rem;
+    --cream: 40 40% 92%;
+    --spice: 15 70% 45%;
+    --turmeric: 45 95% 55%;
+    --sidebar-background: 20 20% 10%;
+    --sidebar-foreground: 35 30% 95%;
+    --sidebar-primary: 35 90% 50%;
+    --sidebar-primary-foreground: 20 25% 6%;
+    --sidebar-accent: 8 80% 55%;
+    --sidebar-accent-foreground: 35 30% 95%;
+    --sidebar-border: 20 15% 20%;
+    --sidebar-ring: 35 90% 50%;
+  }
+
+  .dark {
+    --background: 20 25% 6%;
+    --foreground: 35 30% 95%;
+    --card: 20 20% 10%;
+    --card-foreground: 35 30% 95%;
+    --popover: 20 20% 10%;
+    --popover-foreground: 35 30% 95%;
+    --primary: 35 90% 50%;
+    --primary-foreground: 20 25% 6%;
+    --secondary: 15 70% 45%;
+    --secondary-foreground: 35 30% 95%;
+    --muted: 20 15% 18%;
+    --muted-foreground: 30 15% 60%;
+    --accent: 8 80% 55%;
+    --accent-foreground: 35 30% 95%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 35 30% 98%;
+    --border: 20 15% 20%;
+    --input: 20 15% 14%;
+    --ring: 35 90% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-outfit antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card/40 backdrop-blur-xl border border-border/30 shadow-2xl;
+  }
+}
+
+@layer utilities {
+  .shadow-premium {
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.25);
+  }
+
+  .shadow-premium-hover {
+    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.35);
+  }
+
+  .shadow-glow {
+    box-shadow: 0 0 15px -3px rgba(var(--primary), 0.3);
+  }
+
+  .transition-premium {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Taste-Based Dynamic Glow */
+  .shadow-card-glow {
+    /* Default: Warm Amber */
+    --glow-rgb: 251, 191, 36;
+    box-shadow: 0 0 20px -2px rgba(var(--glow-rgb), 0.3), 0 10px 30px -5px rgba(0, 0, 0, 0.3);
+    border-color: rgba(var(--glow-rgb), 0.4);
+  }
+
+  .shadow-card-glow-hover {
+    box-shadow: 0 0 50px -5px rgba(var(--glow-rgb), 0.6), 0 0 20px -2px rgba(var(--glow-rgb), 0.4), 0 20px 50px -10px rgba(0, 0, 0, 0.5);
+    border-color: rgba(var(--glow-rgb), 0.8);
+  }
+
+  /* Taste Variants */
+  .glow-spicy {
+    --glow-rgb: 239, 68, 68;
+  }
+
+  /* Red-500: Spicy */
+  .glow-sweet {
+    --glow-rgb: 244, 114, 182;
+  }
+
+  /* Pink-400: Sweet/Dessert */
+  .glow-savory {
+    --glow-rgb: 251, 191, 36;
+  }
+
+  /* Amber-400: Savory/Street Food */
+  .glow-premium {
+    --glow-rgb: 147, 197, 253;
+  }
+
+  /* Blue-300: Cool/Premium (Cafe) */
+  .glow-veg {
+    --glow-rgb: 74, 222, 128;
+  }
+
+  /* Green-400: Fresh/Healthy */
+}
