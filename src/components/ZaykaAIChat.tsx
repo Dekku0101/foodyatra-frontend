@@ -45,8 +45,8 @@ const ZaykaAIChat = ({ foodData }: ZaykaAIChatProps) => {
 
         try {
             const res = await aiApi.chat(userMsg.text);
-            const replyText = res.success && res.data?.reply 
-                ? res.data.reply 
+            const replyText = res.success && (res as any).reply 
+                ? (res as any).reply 
                 : (res.error || "Sorry, I'm having trouble thinking right now.");
                 
             const aiMsg: Message = {
