@@ -534,6 +534,8 @@ export const adminRecommendationsApi = {
 export const famousPlaceApi = {
   getAll: () => apiRequest('/famous-places', { method: 'GET' }),
 
+  getById: (id: string) => apiRequest(`/famous-places/${id}`, { method: 'GET' }),
+
   create: (data: any) => apiRequest('/famous-places', {
     method: 'POST',
     body: data
@@ -559,6 +561,12 @@ export const aiApi = {
     }>('/ai/recommend', {
       method: 'POST',
       body: JSON.stringify(data)
+    });
+  },
+  chat: async (message: string) => {
+    return apiRequest<{ reply: string }>('/ai/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message })
     });
   }
 };

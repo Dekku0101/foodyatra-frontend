@@ -11,6 +11,7 @@ import Tours from "./pages/Tours";
 import Food from "./pages/Food";
 import Recommendations from "./pages/Recommendations";
 import AdminRecommendations from "./pages/AdminRecommendations";
+import PlaceDetail from "./pages/PlaceDetail";
 import { LocationProvider } from "./context/LocationContext";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,7 @@ function App() {
             {/* Public Pages */}
             <Route path="/tours" element={<Tours />} />
             <Route path="/food" element={<Food />} />
+            <Route path="/place/:id" element={<PlaceDetail />} />
 
             {/* Protected Routes */}
             <Route

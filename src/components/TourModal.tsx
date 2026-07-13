@@ -1,9 +1,48 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MapPin, Clock, IndianRupee, Navigation, Utensils, Star, Info } from 'lucide-react';
-import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 import { SPRING_ENTRY } from '@/motion/motionPresets';
 import { Tour } from './TourCard';
+import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix Leaflet's default icon path issues with Vite bundler
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+import iconRetina from 'leaflet/dist/images/marker-icon-2x.png';
+
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    iconRetinaUrl: iconRetina,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    tooltipAnchor: [16, -28],
+    shadowSize: [41, 41]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
+// Custom numbered icon for tour stops
+const createStopIcon = (num: number) => L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="background-color: #F59E0B; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${num}</div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
+});
+
+// Component to handle fitting map to tour stops
+function TourMapEffect({ stops }: { stops: any[] }) {
+    const map = useMap();
+    useEffect(() => {
+        if (stops && stops.length > 0) {
+            const latLngs = stops.map(s => [s.lat, s.lng] as [number, number]);
+            map.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50] });
+        }
+    }, [stops, map]);
+    return null;
+}
 
 interface TourModalProps {
     tour: Tour | null;
@@ -12,99 +51,10 @@ interface TourModalProps {
 }
 
 const TourModal = ({ tour, onClose, isOpen }: TourModalProps) => {
-    const mapRef = useRef<HTMLDivElement>(null);
-    const [map, setMap] = useState<google.maps.Map | null>(null);
-
-
-
-    useEffect(() => {
-        if (isOpen && tour && mapRef.current) {
-            initMap();
-        }
-    }, [isOpen, tour]);
-
-    const initMap = async () => {
-        try {
-            setOptions({
-                key: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
-                v: 'weekly',
-                libraries: ['places']
-            });
-
-            await importLibrary("maps");
-            await importLibrary("places");
-
-            // Access google from global scope after loading
-            const google = window.google;
-            const Map = google.maps.Map;
-
-            // Center map on the first stop or default to Vadodara
-            const center = tour?.stops?.[0] ? { lat: tour.stops[0].lat, lng: tour.stops[0].lng } : { lat: 22.3072, lng: 73.1812 };
-
-            const mapInstance = new Map(mapRef.current!, {
-                center: center,
-                zoom: 14,
-                mapId: 'DEMO_MAP_ID', // Use a valid Map ID if available, or remove for standard map
-                styles: [
-                    { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-                    { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-                    { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-                ],
-                disableDefaultUI: true,
-                zoomControl: true,
-            });
-
-            setMap(mapInstance);
-
-            if (tour?.stops && tour.stops.length > 0) {
-                const bounds = new google.maps.LatLngBounds();
-                const pathCoordinates: google.maps.LatLngLiteral[] = [];
-
-                tour.stops.forEach((stop, index) => {
-                    const position = { lat: stop.lat, lng: stop.lng };
-                    pathCoordinates.push(position);
-                    bounds.extend(position);
-
-                    // Marker
-                    new google.maps.Marker({
-                        position: position,
-                        map: mapInstance,
-                        title: stop.name,
-                        label: {
-                            text: (index + 1).toString(),
-                            color: 'white',
-                            fontWeight: 'bold'
-                        },
-                        icon: {
-                            path: google.maps.SymbolPath.CIRCLE,
-                            scale: 14,
-                            fillColor: '#F59E0B', // Amber-500
-                            fillOpacity: 1,
-                            strokeWeight: 2,
-                            strokeColor: '#FFFFFF',
-                        }
-                    });
-                });
-
-                // Draw Polyline Route
-                const flightPath = new google.maps.Polyline({
-                    path: pathCoordinates,
-                    geodesic: true,
-                    strokeColor: '#F59E0B',
-                    strokeOpacity: 0.8,
-                    strokeWeight: 3,
-                });
-
-                flightPath.setMap(mapInstance);
-                mapInstance.fitBounds(bounds);
-            }
-
-        } catch (e) {
-            console.error('Error loading map:', e);
-        }
-    };
-
     if (!isOpen || !tour) return null;
+
+    const center = tour?.stops?.[0] ? [tour.stops[0].lat, tour.stops[0].lng] as [number, number] : [22.3072, 73.1812] as [number, number];
+    const pathCoordinates = tour?.stops ? tour.stops.map((s: any) => [s.lat, s.lng] as [number, number]) : [];
 
     return (
         <AnimatePresence>
@@ -182,7 +132,7 @@ const TourModal = ({ tour, onClose, isOpen }: TourModalProps) => {
                                     <Navigation className="w-5 h-5 text-primary" /> Itinerary
                                 </h3>
                                 <div className="space-y-6 relative pl-4 border-l-2 border-white/10 ml-2">
-                                    {tour.stops?.map((stop, index) => (
+                                    {tour.stops?.map((stop: any, index: number) => (
                                         <div key={index} className="relative pl-6 group">
                                             {/* Dot */}
                                             <span className="absolute -left-[21px] top-1 w-4 h-4 rounded-full bg-card border-2 border-primary group-hover:bg-primary transition-colors" />
@@ -210,17 +160,43 @@ const TourModal = ({ tour, onClose, isOpen }: TourModalProps) => {
                     </div>
 
                     {/* Right Panel: Map */}
-                    <div className="hidden md:block w-2/3 h-full relative bg-gray-900">
-                        <div ref={mapRef} className="w-full h-full" />
+                    <div className="hidden md:block w-2/3 h-full relative bg-gray-900 z-0">
+                        <MapContainer 
+                            center={center} 
+                            zoom={14} 
+                            style={{ width: '100%', height: '100%' }}
+                            className="z-0"
+                        >
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+                            {tour.stops?.map((stop: any, index: number) => (
+                                <Marker 
+                                    key={index} 
+                                    position={[stop.lat, stop.lng]}
+                                    icon={createStopIcon(index + 1)}
+                                >
+                                    <Popup>
+                                        <div className="font-bold">{stop.name}</div>
+                                        <div className="text-xs">{stop.highlightDish}</div>
+                                    </Popup>
+                                </Marker>
+                            ))}
+                            {pathCoordinates.length > 0 && (
+                                <Polyline positions={pathCoordinates} color="#F59E0B" weight={3} opacity={0.8} />
+                            )}
+                            <TourMapEffect stops={tour.stops || []} />
+                        </MapContainer>
+                        
                         {/* Map Overlay Info */}
-                        <div className="absolute bottom-8 left-8 bg-black/80 backdrop-blur-md p-4 rounded-xl border border-white/10 shadow-2xl max-w-xs">
+                        <div className="absolute bottom-8 left-8 bg-black/80 backdrop-blur-md p-4 rounded-xl border border-white/10 shadow-2xl max-w-xs z-[400]">
                             <p className="text-xs text-gray-300 mb-1">Meeting Point</p>
                             <p className="text-white font-bold flex items-center gap-2">
                                 <MapPin className="w-4 h-4 text-primary" /> {tour.meetingPoint || "City Center"}
                             </p>
                         </div>
                     </div>
-
                 </motion.div>
             </div>
         </AnimatePresence>

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue, useMotionValueEvent, animate } from 'framer-motion';
-import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
+
 import {
   MapPin, Sparkles, ArrowRight, ChevronDown, User, Menu, X,
   Flame, Gem, Star, IndianRupee, Clock, Heart, RotateCw, Square,
@@ -251,6 +251,7 @@ const PersonalizedSection = () => {
 // --- DiscoverSection ---
 // --- DiscoverSection ---
 const DiscoverSection = () => {
+  const navigate = useNavigate();
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [selectedLocationsList, setSelectedLocationsList] = useState<any[]>([]);
   const [hoveredCard, setHoveredCard] = useState<number | string | null>(null);
@@ -258,6 +259,8 @@ const DiscoverSection = () => {
   const [priceFilter, setPriceFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [famousFoodsData, setFamousFoodsData] = useState<any[]>(famousFoods);
+  // Track which food IDs came from the DB (famousplace) vs static
+  const [dbFoodIds, setDbFoodIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchFamousPlaces = async () => {
@@ -284,6 +287,7 @@ const DiscoverSection = () => {
             };
           });
           setFamousFoodsData(formattedData);
+          setDbFoodIds(new Set(formattedData.map((f: any) => String(f.id))));
         }
       } catch (error) {
         console.error("Failed to fetch famous places:", error);
@@ -298,13 +302,10 @@ const DiscoverSection = () => {
   }, [famousFoodsData]);
 
   const handleCardClick = (foodItem: any) => {
-    if (foodItem.locations && foodItem.locations.length > 0) {
-      setSelectedLocationsList(foodItem.locations);
-      setSelectedLocation(`Famous for ${foodItem.name}`);
-    } else {
-      setSelectedLocationsList([]);
-      setSelectedLocation(`Famous for ${foodItem.name} at ${foodItem.restaurant}, ${foodItem.area}`);
-    }
+    const idStr = String(foodItem.id);
+    // DB-fetched famous foods have MongoDB ObjectID strings; static have numeric IDs
+    const type = dbFoodIds.has(idStr) ? 'famousplace' : 'static';
+    navigate(`/place/${idStr}?type=${type}`);
   };
 
   return (
@@ -397,7 +398,7 @@ const DiscoverSection = () => {
                   <ScrollReveal key={restaurant.id} delay={index * 0.1}>
                     <FoodCard
                       {...restaurant}
-                      onClick={() => handleCardClick(restaurant)}
+                      onClick={() => navigate(`/place/${restaurant.id}?type=static`)}
                       onHover={() => setHoveredCard(restaurant.id)}
                       onLeave={() => setHoveredCard(null)}
                     />
@@ -420,7 +421,7 @@ const DiscoverSection = () => {
             <div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {hiddenGems.map((food, index) => (
-                  <ScrollReveal key={food.id} delay={index * 0.1}><FoodCard {...food} imageFit="contain" onClick={() => handleCardClick(food)} onHover={() => setHoveredCard(food.id)} onLeave={() => setHoveredCard(null)} /></ScrollReveal>
+                  <ScrollReveal key={food.id} delay={index * 0.1}><FoodCard {...food} imageFit="contain" onClick={() => navigate(`/place/${food.id}?type=static`)} onHover={() => setHoveredCard(food.id)} onLeave={() => setHoveredCard(null)} /></ScrollReveal>
                 ))}
               </div>
             </div>
@@ -867,9 +868,8 @@ const FoodRouletteSection = ({ onClose }: { onClose: () => void }) => {
 
 // --- FoodTourSection ---
 const FoodTourSection = () => {
+  const navigate = useNavigate();
   const [tours, setTours] = useState<Tour[]>([]);
-  const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -902,10 +902,7 @@ const FoodTourSection = () => {
     fetchTours();
   }, []);
 
-  const handleTourClick = (tour: Tour) => {
-    setSelectedTour(tour);
-    setIsModalOpen(true);
-  };
+
 
   return (
     <section className="py-20 px-4 relative bg-black/20">
@@ -936,21 +933,17 @@ const FoodTourSection = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 group/list">
             {tours.map((tour, index) => (
               <ScrollReveal key={tour._id} delay={index * 0.1}>
-                <TourCard tour={tour} onClick={() => handleTourClick(tour)} />
+                <TourCard tour={tour} onClick={() => navigate(`/place/${tour._id}?type=tour`)} />
               </ScrollReveal>
             ))}
           </div>
         )}
       </div>
-
-      {/* <TourModal
-        tour={selectedTour}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      /> */}
     </section>
   );
 };
+
+
 
 // --- BottomNav ---
 const BottomNav = ({ onTabChange }: { onTabChange?: (tab: string) => void }) => {
