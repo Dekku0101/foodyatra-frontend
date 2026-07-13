@@ -4,7 +4,8 @@
  */
 
 // Use explicit full URL - ensure backend URL is correct
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl.replace(/\/$/, '')}/api`;
 
 // Log API base URL for debugging (remove in production)
 if (import.meta.env.DEV) {
